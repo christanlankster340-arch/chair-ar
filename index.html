@@ -381,6 +381,14 @@
                     </svg>
                     线框模式
                 </button>
+                <button class="ctrl-btn" id="btnDance" onclick="toggleDance()" style="background: linear-gradient(135deg, #ff6b6b, #8b83ff);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    💃 跳舞
+                </button>
             </div>
         </div>
 
@@ -458,6 +466,100 @@
                 viewer.style.background = 'radial-gradient(ellipse at center, #1e1e30, #12121a)';
             }
             event.target.closest('.ctrl-btn').classList.toggle('active', wireframe);
+        }
+
+        // ===== DANCE ANIMATION (ported from Unity ChairDancer.cs) =====
+        let isDancing = false;
+        let danceRAF = null;
+        let danceTimer = 0;
+        let moveTimer = 0;
+        let currentMove = 0;
+        let lastTime = 0;
+        const beatSpeed = 2.0;
+        const bounceHeight = 15;   // degrees for model tilt
+        const tiltAngle = 15;
+        const spinSpeed = 90;
+        const slideDistance = 20;
+        const moveDuration = 2.0;  // seconds per move
+        const moveNames = ['弹跳', '扭转', '滑步', '旋转', '摇摆', '抖动'];
+
+        function toggleDance() {
+            isDancing = !isDancing;
+            const btn = document.getElementById('btnDance');
+            btn.classList.toggle('active', isDancing);
+            
+            if (isDancing) {
+                // Disable auto-rotate when dancing
+                viewer.autoRotate = false;
+                document.getElementById('btnRotate').classList.remove('active');
+                isAutoRotate = false;
+                lastTime = performance.now();
+                danceTimer = 0;
+                moveTimer = 0;
+                currentMove = 0;
+                danceLoop(performance.now());
+            } else {
+                cancelAnimationFrame(danceRAF);
+                // Reset model to original position
+                viewer.orientation = '0 0 0';
+                viewer.style.transform = '';
+                viewer.cameraOrbit = '45deg 65deg 3m';
+            }
+        }
+
+        function danceLoop(now) {
+            if (!isDancing) return;
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+            danceTimer += dt;
+            moveTimer += dt;
+
+            if (moveTimer >= moveDuration) {
+                moveTimer = 0;
+                currentMove = (currentMove + 1) % 6;
+            }
+
+            const t = danceTimer;
+            let rotX = 0, rotY = 0, rotZ = 0;
+            let translateX = 0, translateY = 0;
+
+            switch (currentMove) {
+                case 0: // Bounce
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * Math.PI)) * bounceHeight;
+                    rotZ = Math.sin(t * beatSpeed * 0.5 * Math.PI) * tiltAngle * 0.3;
+                    break;
+                case 1: // Twist
+                    rotY = Math.sin(t * beatSpeed * Math.PI) * tiltAngle * 2;
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * 2 * Math.PI)) * bounceHeight * 0.3;
+                    break;
+                case 2: // Slide
+                    translateX = Math.sin(t * beatSpeed * Math.PI) * slideDistance;
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * 2 * Math.PI)) * bounceHeight * 0.4;
+                    rotZ = -Math.sin(t * beatSpeed * Math.PI) * tiltAngle * 0.5;
+                    break;
+                case 3: // Spin
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * Math.PI)) * bounceHeight * 0.6;
+                    rotY = (t * spinSpeed * 2) % 360;
+                    break;
+                case 4: // RockBounce
+                    rotX = Math.sin(t * beatSpeed * Math.PI) * tiltAngle;
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * 2 * Math.PI)) * bounceHeight * 0.5;
+                    rotZ = Math.cos(t * beatSpeed * 0.5 * Math.PI) * tiltAngle * 0.3;
+                    break;
+                case 5: // Wiggle
+                    rotX = Math.sin(t * beatSpeed * 3 * Math.PI) * tiltAngle * 0.4;
+                    rotZ = Math.cos(t * beatSpeed * 2.5 * Math.PI) * tiltAngle * 0.4;
+                    translateY = -Math.abs(Math.sin(t * beatSpeed * 4 * Math.PI)) * bounceHeight * 0.3;
+                    translateX = Math.sin(t * beatSpeed * 1.5 * Math.PI) * slideDistance * 0.3;
+                    break;
+            }
+
+            // Apply orientation (rotation) to the 3D model
+            viewer.orientation = `${rotX}deg ${rotY}deg ${rotZ}deg`;
+            // Apply position offset via CSS transform
+            viewer.style.transform = `translate(${translateX}px, ${translateY}px)`;
+
+            danceRAF = requestAnimationFrame(danceLoop);
         }
 
         // Generate QR Code
