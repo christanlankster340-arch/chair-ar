@@ -340,9 +340,10 @@
                 shadow-softness="0.8"
                 exposure="1.0"
                 environment-image="neutral"
-                camera-orbit="45deg 65deg 3m"
-                min-camera-orbit="auto auto 1.5m"
-                max-camera-orbit="auto auto 8m"
+                scale="0.5 0.5 0.5"
+                camera-orbit="45deg 65deg 1.5m"
+                min-camera-orbit="auto auto 0.75m"
+                max-camera-orbit="auto auto 4m"
                 loading="eager"
                 poster=""
             >
@@ -452,7 +453,7 @@
         }
 
         function resetView() {
-            viewer.cameraOrbit = '45deg 65deg 3m';
+            viewer.cameraOrbit = '45deg 65deg 1.5m';
             viewer.cameraTarget = 'auto auto auto';
             viewer.fieldOfView = 'auto';
         }
@@ -503,7 +504,7 @@
                 // Reset model to original position
                 viewer.orientation = '0 0 0';
                 viewer.style.transform = '';
-                viewer.cameraOrbit = '45deg 65deg 3m';
+                viewer.cameraOrbit = '45deg 65deg 1.5m';
             }
         }
 
